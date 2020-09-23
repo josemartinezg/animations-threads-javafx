@@ -19,11 +19,17 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Main extends Application {
 
     private static final double PAUSE = 1;
     public int num = 0;
     double x0 = 20, y0 = 20, altoMarco, anchoLuces, anchoSemaforo=100, altoSemaforo=200;
+    private static int threadNumber = 0, invokeThreadNumber =0;
+    private static final Object myLock = new Object();
+
     Color colorsMatrix[][] = {
             {Color.DARKRED,Color.GOLDENROD,Color.DARKGREEN},
             {Color.RED,Color.GOLDENROD,Color.DARKGREEN},
@@ -39,6 +45,7 @@ public class Main extends Application {
     GraphicsContext graphicsContext2;
     GraphicsContext graphicsContext3;
     GraphicsContext graphicsContext4;
+    List<GraphicsContext> contextList = new ArrayList<>();
 
     /*Innit*/
     @Override
@@ -54,21 +61,25 @@ public class Main extends Application {
         canvasSemaforo1.setLayoutX(300);
         canvasSemaforo1.setLayoutY(0);
         graphicsContext = canvasSemaforo1.getGraphicsContext2D();
+        contextList.add(graphicsContext);
 
         Canvas canvasSemaforo2 = new Canvas(400,600);
         canvasSemaforo2.setLayoutX(300);
         canvasSemaforo2.setLayoutY(300);
         graphicsContext2 = canvasSemaforo2.getGraphicsContext2D();
+        contextList.add(graphicsContext2);
 
         Canvas canvasSemaforo3 = new Canvas(400,600);
         canvasSemaforo3.setLayoutX(150);
         canvasSemaforo3.setLayoutY(150);
         graphicsContext3 = canvasSemaforo3.getGraphicsContext2D();
+        contextList.add(graphicsContext3);
 
         Canvas canvasSemaforo4 = new Canvas(400,600);
         canvasSemaforo4.setLayoutX(450);
         canvasSemaforo4.setLayoutY(150);
         graphicsContext4 = canvasSemaforo4.getGraphicsContext2D();
+        contextList.add(graphicsContext4);
 
         creatingSemaphore(primaryStage, root, canvasSemaforo1, graphicsContext);
         creatingSemaphore(primaryStage, root, canvasSemaforo2, graphicsContext2);
@@ -124,13 +135,7 @@ public class Main extends Application {
         graphicsContext.fillRect(x0,y0,anchoSemaforo,altoSemaforo);
         //Dibuja las bombillas del semáforo
 
-        for(int idx = 0 ;idx < 3;idx++) {
-            graphicsContext.setStroke(Color.BLACK);
-            graphicsContext.setLineWidth(5);
-            graphicsContext.strokeOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
-            graphicsContext.setFill(colorsMatrix[0][idx]);
-            graphicsContext.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
-        }
+        control();
 
         root.getChildren().add(canvas);
 
@@ -157,6 +162,64 @@ public class Main extends Application {
             primaryStage.show();
         }
     }
+    private void control() {
+        //invoke 3 synchronized control threads
+        new Thread( new ColorControl()).start();
+        new Thread( new ColorControl()).start();
+        new Thread( new ColorControl()).start();
+    }
+
+    private void update(){
+        for (GraphicsContext graphCntxt : contextList){
+            for(int idx = 0 ;idx < 3;idx++) {
+                graphCntxt.setStroke(Color.BLACK);
+                graphCntxt.setLineWidth(5);
+                graphCntxt.strokeOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+                graphCntxt.setFill(colorsMatrix[0][idx]);
+                graphCntxt.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+            }
+        }
+    }
+
+    class ColorControl implements Runnable{
+        private int threadID;
+        private static final long PAUSE = 2000;
+        private int MAX_THREADS = 3;
+        private boolean isStopped = false;
+        ColorControl() {
+            threadID = threadNumber ++;
+        }
+
+        void reset() {
+            threadNumber = 0; invokeThreadNumber =0;
+        }
+        @Override
+        public void run() {
+            synchronized (myLock) {
+
+                while (! isStopped  ) {
+                    while (threadID != invokeThreadNumber) {
+                        try {
+                            myLock.wait();
+                        } catch (InterruptedException e) {}
+                    }
+                    //do work here
+                    update();
+
+                    try {
+                        Thread.sleep(PAUSE);
+                    } catch (InterruptedException ex) { ex.printStackTrace();}
+                    invokeThreadNumber++;
+                    myLock.notifyAll();
+                    if( invokeThreadNumber >= MAX_THREADS ) {
+                        reset();
+                    }
+                }
+            }
+        }
+
+    }
+
 
 
 
