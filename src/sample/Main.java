@@ -105,10 +105,11 @@ public class Main extends Application {
         encendidoSemaforo.setPrefWidth(200);
         PauseTransition pause = new PauseTransition(Duration.seconds(PAUSE));
         pause.setOnFinished(actionEvent ->{
+            num = 0;
             num=++num%4;
-            label.setStyle(lightsBackground[num]);
-            label.setText(signals[num]);
-            encendidoSemaforo.setText(messages[num]);
+            //label.setStyle(lightsBackground[num]);
+            // label.setText(signals[num]);
+            //encendidoSemaforo.setText(messages[num]);
             //porneste becuri semafor
             for(int idx = 0;idx < 3;idx++) {
                 graphicsContext.setFill(colorsMatrix[num][idx]);
@@ -117,9 +118,6 @@ public class Main extends Application {
             pause.play();
         } );
         pause.play();
-        encendidoSemaforo.setOnAction((ActionEvent event) -> {
-
-        });
         root.getChildren().add(encendidoSemaforo);
         primaryStage.show();
     }
@@ -135,7 +133,14 @@ public class Main extends Application {
         graphicsContext.fillRect(x0,y0,anchoSemaforo,altoSemaforo);
         //Dibuja las bombillas del semáforo
 
-        control();
+        for(int idx = 0 ;idx < 3;idx++) {
+            graphicsContext.setStroke(Color.BLACK);
+            graphicsContext.setLineWidth(5);
+            graphicsContext.strokeOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+            graphicsContext.setFill(colorsMatrix[0][idx]);
+            graphicsContext.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+        }
+
 
         root.getChildren().add(canvas);
 
@@ -171,13 +176,21 @@ public class Main extends Application {
 
     private void update(){
         for (GraphicsContext graphCntxt : contextList){
-            for(int idx = 0 ;idx < 3;idx++) {
-                graphCntxt.setStroke(Color.BLACK);
-                graphCntxt.setLineWidth(5);
-                graphCntxt.strokeOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
-                graphCntxt.setFill(colorsMatrix[0][idx]);
-                graphCntxt.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
-            }
+            PauseTransition pause = new PauseTransition(Duration.seconds(PAUSE));
+            pause.setOnFinished(actionEvent ->{
+                num = 0;
+                num=++num%4;
+                //label.setStyle(lightsBackground[num]);
+               // label.setText(signals[num]);
+                //encendidoSemaforo.setText(messages[num]);
+                //porneste becuri semafor
+                for(int idx = 0;idx < 3;idx++) {
+                    graphCntxt.setFill(colorsMatrix[num][idx]);
+                    graphCntxt.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+                }
+                pause.play();
+            } );
+            pause.play();
         }
     }
 
