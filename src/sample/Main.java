@@ -104,20 +104,20 @@ public class Main extends Application {
         encendidoSemaforo.setPrefHeight(25);
         encendidoSemaforo.setPrefWidth(200);
         PauseTransition pause = new PauseTransition(Duration.seconds(PAUSE));
-        pause.setOnFinished(actionEvent ->{
-            num = 0;
-            num=++num%4;
-            //label.setStyle(lightsBackground[num]);
-            // label.setText(signals[num]);
-            //encendidoSemaforo.setText(messages[num]);
-            //porneste becuri semafor
-            for(int idx = 0;idx < 3;idx++) {
-                graphicsContext.setFill(colorsMatrix[num][idx]);
-                graphicsContext.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
-            }
-            pause.play();
-        } );
-        pause.play();
+        control();
+//        pause.setOnFinished(actionEvent ->{
+//            num=++num%4;
+//            //label.setStyle(lightsBackground[num]);
+//            // label.setText(signals[num]);
+//            //encendidoSemaforo.setText(messages[num]);
+//            //porneste becuri semafor
+//            for(int idx = 0;idx < 3;idx++) {
+//                graphicsContext.setFill(colorsMatrix[num][idx]);
+//                graphicsContext.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+//            }
+//            pause.play();
+//        } );
+//        pause.play();
         root.getChildren().add(encendidoSemaforo);
         primaryStage.show();
     }
@@ -169,34 +169,29 @@ public class Main extends Application {
     }
     private void control() {
         //invoke 3 synchronized control threads
+
         new Thread( new ColorControl()).start();
         new Thread( new ColorControl()).start();
         new Thread( new ColorControl()).start();
+
     }
 
-    private void update(){
-        for (GraphicsContext graphCntxt : contextList){
-            PauseTransition pause = new PauseTransition(Duration.seconds(PAUSE));
-            pause.setOnFinished(actionEvent ->{
-                num = 0;
-                num=++num%4;
-                //label.setStyle(lightsBackground[num]);
-               // label.setText(signals[num]);
-                //encendidoSemaforo.setText(messages[num]);
-                //porneste becuri semafor
-                for(int idx = 0;idx < 3;idx++) {
-                    graphCntxt.setFill(colorsMatrix[num][idx]);
-                    graphCntxt.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+    private void update() throws InterruptedException {
+        num=++num%4;
+        for (GraphicsContext gc : contextList){
+            for(int idx = 0;idx < 3;idx++) {
+                if (idx == 1){
+                    Thread.sleep(1000);
                 }
-                pause.play();
-            } );
-            pause.play();
+                graphicsContext.setFill(colorsMatrix[num][idx]);
+                graphicsContext.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+            }
         }
     }
 
     class ColorControl implements Runnable{
         private int threadID;
-        private static final long PAUSE = 2000;
+        private static final long PAUSE = 1500;
         private int MAX_THREADS = 3;
         private boolean isStopped = false;
         ColorControl() {
@@ -217,7 +212,11 @@ public class Main extends Application {
                         } catch (InterruptedException e) {}
                     }
                     //do work here
-                    update();
+                    try {
+                        update();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
                     try {
                         Thread.sleep(PAUSE);
