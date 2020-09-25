@@ -183,8 +183,8 @@ public class Main extends Application {
                 if (idx == 1){
                     Thread.sleep(1000);
                 }
-                graphicsContext.setFill(colorsMatrix[num][idx]);
-                graphicsContext.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
+                gc.setFill(colorsMatrix[num][idx]);
+                gc.fillOval(x0+altoMarco,y0+altoMarco+idx*(altoMarco+anchoLuces),anchoLuces,anchoLuces);
             }
         }
     }
